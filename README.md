@@ -45,8 +45,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourbank/investassist-pro.git
-   cd investassist-pro
+   git -c http.sslVerify=false clone https://github.com/kartik71/investment-advisor-agentic.git
+   cd investment-advisor-agentic
    ```
 
 2. **Set up environment**
