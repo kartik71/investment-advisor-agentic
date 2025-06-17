@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  investassist-app:
+    build: .
+    container_name: investassist-pro
+    ports:
+      - "8501:8501"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/investassist
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    restart: unless-stopped
+    networks:
+      - investassist-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: investassist-db
+    environment:
+      - POSTGRES_DB=investassist
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - investassist-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: investassist-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - investassist-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: investassist-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - investassist-app
+    restart: unless-stopped
+    networks:
+      - investassist-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  investassist-network:
+    driver: bridge

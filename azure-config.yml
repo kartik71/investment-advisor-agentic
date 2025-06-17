@@ -1,0 +1,46 @@
+version: '1.0'
+
+# Azure Container App Configuration
+containerApp:
+  name: investassist-pro
+  resourceGroup: your-resource-group  # Update with your resource group name
+  location: eastus  # Update with your preferred Azure region
+  
+  # Container configuration
+  container:
+    image: ${ACR_NAME}.azurecr.io/investassist-pro:latest
+    port: 8501
+    cpu: 1.0
+    memory: 2Gi
+    
+  # Scale configuration
+  scale:
+    minReplicas: 1
+    maxReplicas: 5
+    rules:
+      - name: http-scaling
+        http:
+          metadata:
+            concurrentRequests: "10"
+
+  # Environment variables
+  env:
+    - name: ENVIRONMENT
+      value: "production"
+    - name: DATABASE_URL
+      secretRef: database-connection-string
+    - name: REDIS_URL
+      secretRef: redis-connection-string
+
+  # Ingress configuration
+  ingress:
+    external: true
+    targetPort: 8501
+    transport: http
+
+# Secrets (to be created separately in Azure)
+secrets:
+  - name: database-connection-string
+    description: "PostgreSQL connection string"
+  - name: redis-connection-string
+    description: "Redis connection string"
